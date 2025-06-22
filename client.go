@@ -50,7 +50,7 @@ func main() {
 			if err != nil {
 				fmt.Println("Error while sending file protocol:", err)
 			}
-			fmt.Println(line)<
+			fmt.Println(line)
 		}
 		sendFile(fileName, conn)
 	}

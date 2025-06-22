@@ -40,7 +40,16 @@ func main() {
 func handleConnection(conn net.Conn) {
 	reader := bufio.NewReader(conn)
 
-	clientNameLine, _ := reader.ReadString('\n')
+	clientNameLine, err := reader.ReadString('\n')
+	if err != nil {
+		if err == io.EOF {
+			fmt.Println("Client lost connection\n", err)
+		} else {
+			fmt.Println("Error while reading:", err)
+		}
+		return
+	}
+
 	//fmt.Println(clientNameLine)
 	clientName := strings.TrimSpace(strings.Split(clientNameLine, " ")[1])
 	fmt.Println(clientName)
@@ -73,7 +82,12 @@ func handleConnection(conn net.Conn) {
 
 		written, err := io.CopyN(outFile, reader, fileSize)
 		if err != nil {
-			panic(err)
+			if err == io.EOF {
+				fmt.Println("Client lost connection while sending files\n", err)
+			} else {
+				fmt.Println("Error occured while receiving binary file data:", err)
+			}
+			return
 		}
 		outFile.Close()
 		fmt.Printf("Received %d bytes and saved it on %s\n", written, fileName)
