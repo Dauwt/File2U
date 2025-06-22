@@ -2,12 +2,14 @@ package main
 
 import (
 	"File2U/utils"
+	"bufio"
 	"crypto/tls"
 	"fmt"
 	"io"
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func main() {
@@ -61,8 +63,10 @@ func handleFiles() []string {
 	fmt.Println("Path of the files you want to send:")
 	var files []string
 	for {
-		var inputFiles string
-		fmt.Scanln(&inputFiles)
+		reader := bufio.NewReader(os.Stdin)
+		inputFiles, _ := reader.ReadString('\n')
+		inputFiles = strings.TrimSpace(inputFiles)
+		fmt.Println(inputFiles)
 		if inputFiles == "!stop" {
 			break
 		} else {
