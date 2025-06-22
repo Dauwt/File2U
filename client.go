@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"path/filepath"
 )
 
 func main() {
@@ -100,7 +101,7 @@ func handleFileProtocol(fileName string) ([]string, error) {
 		return fileProtocol, fmt.Errorf("Error while getting file size: %d", fileErr)
 	}
 
-	fileProtocol = append(fileProtocol, fmt.Sprintf("FILENAME %s", fileName))
+	fileProtocol = append(fileProtocol, fmt.Sprintf("FILENAME %s", filepath.Base(fileName)))
 	fileProtocol = append(fileProtocol, fmt.Sprintf("FILESIZE %d", fileSize))
 
 	return fileProtocol, nil
