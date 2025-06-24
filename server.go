@@ -51,29 +51,34 @@ func handleConnection(conn net.Conn) {
 	}
 
 	//fmt.Println(clientNameLine)
-	clientName := strings.TrimSpace(strings.Split(clientNameLine, " ")[1])
+	clientName := strings.TrimSpace(strings.TrimPrefix(clientNameLine, "CLIENTNAME "))
 	fmt.Println(clientName)
 
 	filesNumLine, _ := reader.ReadString('\n')
 	//fmt.Println(filesNumLine)
-	filesNum, _ := strconv.Atoi(strings.TrimSpace(strings.Split(filesNumLine, " ")[1]))
+	filesNum, _ := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(filesNumLine, "FILESNUM ")))
 	fmt.Println(filesNum)
 
 	totalSizeLine, _ := reader.ReadString('\n')
 	//fmt.Println(totalSizeLine)
-	totalSize, _ := strconv.ParseInt(strings.TrimSpace(strings.Split(totalSizeLine, " ")[1]), 10, 64)
+	totalSize, _ := strconv.ParseInt(strings.TrimSpace(strings.TrimPrefix(totalSizeLine, "TOTALSIZE ")), 10, 64)
 	fmt.Println(totalSize)
 
 	for i := 0; i < filesNum; i++ {
 		fileNameLine, _ := reader.ReadString('\n')
 		//fmt.Println(fileNameLine)
-		fileName := strings.TrimSpace(strings.Split(fileNameLine, " ")[1])
+		fileName := strings.TrimSpace(strings.TrimPrefix(fileNameLine, "FILENAME "))
 		fmt.Println(fileName)
 
 		fileSizeLine, _ := reader.ReadString('\n')
 		//fmt.Println(fileSizeLine)
-		fileSize, _ := strconv.ParseInt(strings.TrimSpace(strings.Split(fileSizeLine, " ")[1]), 10, 64)
+		fileSize, _ := strconv.ParseInt(strings.TrimSpace(strings.TrimPrefix(fileSizeLine, "FILESIZE ")), 10, 64)
 		fmt.Println(fileSize)
+
+		err := os.MkdirAll(filepath.Dir(filepath.Join("out", fileName)), 0755)
+		if err != nil {
+			panic(err)
+		}
 
 		outFile, err := os.Create(filepath.Join("out", fileName))
 		if err != nil {

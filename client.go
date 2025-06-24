@@ -24,7 +24,10 @@ func main() {
 	defer conn.Close()
 	fmt.Println("Ligação estabelecida com sucesso.")
 
-	var fileNames []string = handleFiles()
+	fileNames, err := handleFiles()
+	if err != nil {
+		panic(err)
+	}
 
 	var protocol []string
 	var protocolErr error
@@ -59,27 +62,66 @@ func main() {
 	}
 }
 
-func handleFiles() []string {
+func handleFiles() ([]string, error) {
 	fmt.Println("Path of the files you want to send:")
 	var files []string
 	for {
 		reader := bufio.NewReader(os.Stdin)
 		inputFiles, _ := reader.ReadString('\n')
 		inputFiles = strings.TrimSpace(inputFiles)
-		fmt.Println(inputFiles)
+
+		fmt.Println("inputFiles:", inputFiles)
 		if inputFiles == "!stop" {
 			break
 		} else {
-			if _, err := os.Stat(inputFiles); err != nil {
+			info, err := os.Stat(inputFiles)
+			if err != nil {
+				fmt.Println("Error:", err)
+				return nil, err
+			}
+
+			if err != nil {
 				fmt.Println(fmt.Sprintf("Couldn't find the specified file '%s'", inputFiles))
 				continue
 			}
-			files = append(files, inputFiles)
+
+			if !info.IsDir() {
+				files = append(files, filepath.Base(inputFiles))
+			} else {
+				root := inputFiles
+				err := filepath.Walk(root, func(path string, subInfo os.FileInfo, err error) error {
+					if err != nil {
+						return err
+					}
+
+					if path == root {
+						return nil
+					}
+
+					relPath, err := filepath.Rel(filepath.Dir(root), path)
+					if err != nil {
+						return err
+					}
+
+					if !subInfo.IsDir() {
+						files = append(files, relPath)
+						fmt.Println("Relative Path(File):", relPath)
+					} else {
+						fmt.Println("Relative Path(Directory):", relPath)
+					}
+
+					return nil
+				})
+
+				if err != nil {
+					return nil, fmt.Errorf("Error while walking through directory:", err)
+				}
+			}
 		}
 	}
 	fmt.Println("Files:", files)
 
-	return files
+	return files, nil
 }
 
 func handleInitialFileProtocol(fileNames []string) ([]string, error) {
@@ -105,7 +147,7 @@ func handleFileProtocol(fileName string) ([]string, error) {
 		return fileProtocol, fmt.Errorf("Error while getting file size: %d", fileErr)
 	}
 
-	fileProtocol = append(fileProtocol, fmt.Sprintf("FILENAME %s", filepath.Base(fileName)))
+	fileProtocol = append(fileProtocol, fmt.Sprintf("FILENAME %s", fileName))
 	fileProtocol = append(fileProtocol, fmt.Sprintf("FILESIZE %d", fileSize))
 
 	return fileProtocol, nil
